@@ -11,13 +11,13 @@ export default () => {
   const [token, setToken] = useState(storedToken)
 
   useEffect(() => {
-    if (token == null) {
-      client.defaults.headers.authorization = null
-      window.localStorage.removeItem('token')
-      return
+    console.log('setting token')
+    console.log(token)
+    if (token) {
+      client.defaults.headers.authorization = `Bearer ${token}`
+    } else {
+      client.defaults.headers.authorization = undefined
     }
-    client.defaults.headers.authorization = `Bearer ${token}`
-    window.localStorage.setItem('token', token)
   }, [token])
 
   return {

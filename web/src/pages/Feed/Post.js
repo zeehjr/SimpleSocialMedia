@@ -28,13 +28,13 @@ const Post = ({ data, setPost }) => {
     if (!liked) {
       api.post(`/v1/posts/${id}/likes/`).then(res => {
         if (res.status === 201) {
-          setPost({ ...data, liked: true })
+          setPost({ ...data, liked: true, likes: likes + 1 })
         }
       })
     } else {
       api.post(`/v1/posts/${id}/likes/unlike/`).then(res => {
         if (res.status === 200) {
-          setPost({ ...data, liked: false })
+          setPost({ ...data, liked: false, likes: likes - 1 })
         }
       })
     }
