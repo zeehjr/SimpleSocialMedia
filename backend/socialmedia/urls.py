@@ -1,7 +1,6 @@
 """ Modules """
 from django.urls import path, include
 from rest_framework_nested import routers
-from rest_framework.authtoken.views import obtain_auth_token
 from . import views
 
 ROUTER = routers.DefaultRouter()
@@ -14,11 +13,19 @@ ROUTER.register(r'posts', views.PostViewSet)
 # ROUTER.register(r'commentlikes', views.CommentLikeViewSet)
 
 POSTS_ROUTER = routers.NestedDefaultRouter(ROUTER, r'posts', lookup='post')
+
 POSTS_ROUTER.register(r'comments', views.CommentViewSet,
-                      basename='post-comments')
+                      basename='comments')
+
+POSTS_ROUTER.register(r'likes', views.LikeViewSet, basename='like')
+
+COMMENTS_ROUTER = routers.NestedDefaultRouter(
+    POSTS_ROUTER, r'comments', lookup='comment')
+COMMENTS_ROUTER.register(
+    r'likes', views.LikeViewSet, basename='like')
 
 urlpatterns = [
     path('', include(ROUTER.urls)),
     path('', include(POSTS_ROUTER.urls)),
-    path(r'^api-token-auth/', obtain_auth_token)
+    path('', include(COMMENTS_ROUTER.urls))
 ]

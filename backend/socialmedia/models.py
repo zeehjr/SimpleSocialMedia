@@ -26,18 +26,14 @@ class Comment(models.Model):
         return self.content
 
 
-class PostLike(models.Model):
-    """ PostLike model """
+class Like(models.Model):
     author = models.ForeignKey(User, on_delete=models.CASCADE)
+    date = models.DateTimeField()
     post = models.ForeignKey(Post, on_delete=models.CASCADE)
-    date = models.DateTimeField('date')
+    comment = models.ForeignKey(Comment, on_delete=models.CASCADE)
 
     def __str__(self):
-        return self.author.username
+        if self.post is not None:
+            return f"{self.author.username} - {self.post}"
 
-
-class CommentLike(models.Model):
-    """ CommentLike model """
-    author = models.ForeignKey(User, on_delete=models.CASCADE)
-    comment = models.ForeignKey(Comment, on_delete=models.CASCADE)
-    date = models.DateTimeField('date')
+        return f"{self.author.username} - {self.comment}"
