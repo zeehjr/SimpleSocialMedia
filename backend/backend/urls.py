@@ -21,6 +21,6 @@ from .views import register
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/v1/', include('socialmedia.urls')),
-    path('auth/register/', register),
-    path('auth/token/', obtain_jwt_token),
+    path('api/auth/register/', register),
+    path('api/auth/token/', obtain_jwt_token),
 ]

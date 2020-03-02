@@ -21,21 +21,21 @@ class GroupSerializer(serializers.ModelSerializer):
 
 class LikeSerializer(serializers.ModelSerializer):
     """ Like Serializer """
-    author = serializers.PrimaryKeyRelatedField(read_only=True)
+    author = UserSerializer(read_only=True)
     date = serializers.DateTimeField(read_only=True)
 
     def create(self, validated_data):
         author = self.context['request'].user
-        post_id = self.context['view'].kwargs['post_pk']
-        comment_id = self.context['view'].kwargs['comment_pk']
+        post_id = self.context['view'].kwargs.get('post_pk', None)
+        comment_id = self.context['view'].kwargs.get('comment_pk', None)
 
         if comment_id is not None:
             like, created = Like.objects.get_or_create(
-                author=author, post_id=None, comment_id=comment_id)
+                author=author, post_id=None, comment_id=comment_id, defaults={"date": timezone.now()})
             return like
 
         like, created = Like.objects.get_or_create(
-            author=author, post_id=post_id, comment_id=comment_id)
+            author=author, post_id=post_id, comment_id=None, defaults={"date": timezone.now()})
         return like
 
     def update(self, validated_data):
@@ -43,14 +43,14 @@ class LikeSerializer(serializers.ModelSerializer):
 
     def delete(self):
         author = self.context['request'].user
-        post_id = self.context['view'].kwargs['post_pk']
-        comment_id = self.context['view'].kwargs['comment_pk']
+        post_id = self.context['view'].kwargs.get('post_pk', None)
+        comment_id = self.context['view'].kwargs.get('comment_pk', None)
 
-        like = Like.objects.get(
+        likes = Like.objects.filter(
             author=author, post_id=post_id, comment_id=comment_id)
-        like.delete()
+        likes.delete()
 
-        return like
+        return likes
 
     class Meta:
         model = Like
@@ -59,7 +59,7 @@ class LikeSerializer(serializers.ModelSerializer):
 
 class CommentSerializer(serializers.ModelSerializer):
     """ Comment Serializer """
-    author = serializers.PrimaryKeyRelatedField(read_only=True)
+    author = UserSerializer(read_only=True)
     pub_date = serializers.DateTimeField(read_only=True,)
 
     likes = LikeSerializer(
@@ -83,11 +83,15 @@ class CommentSerializer(serializers.ModelSerializer):
 
 class PostSerializer(serializers.ModelSerializer):
     """ PostSerializer """
-    author = serializers.PrimaryKeyRelatedField(read_only=True)
+    author = UserSerializer(read_only=True)
+
     pub_date = serializers.DateTimeField(read_only=True,)
     # comments = CommentSerializer(source='comment_set', many=True)
-    likes = LikeSerializer(
-        source='like_set', many=True, read_only=True)
+    likes = serializers.SerializerMethodField()
+    comments = serializers.SerializerMethodField()
+    liked = serializers.SerializerMethodField()
+    # likes = LikeSerializer(
+    #     source='like_set', many=True, read_only=True)
 
     def create(self, validated_data):
         return Post.objects.create(
@@ -98,5 +102,15 @@ class PostSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Post
-        fields = ['id', 'author', 'content', 'pub_date', 'likes']
+        fields = ['id', 'author', 'content',
+                  'pub_date', 'likes', 'comments', 'liked']
         depth = 1
+
+    def get_likes(self, obj):
+        return obj.like_set.count()
+
+    def get_comments(self, obj):
+        return obj.comment_set.count()
+
+    def get_liked(self, obj):
+        return obj.like_set.filter(author=self.context['request'].user).count() == 1

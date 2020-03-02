@@ -38,18 +38,29 @@ class CommentViewSet(viewsets.ModelViewSet):
 
 
 class LikeViewSet(
-    mixins.ListModelMixin,
-    mixins.UpdateModelMixin,
-    mixins.DestroyModelMixin,
-    viewsets.GenericViewSet
+        mixins.ListModelMixin,
+        mixins.CreateModelMixin,
+        viewsets.GenericViewSet
 ):
     serializer_class = serializers.LikeSerializer
 
     def get_queryset(self):
-        post_pk = self.kwargs['post_pk']
-        comment_pk = self.kwargs['comment_pk']
+        post_pk = self.kwargs.get('post_pk', None)
+        comment_pk = self.kwargs.get('comment_pk', None)
 
         if comment_pk is not None:
             return Like.objects.filter(comment_id=comment_pk)
 
         return Like.objects.filter(post_id=post_pk)
+
+    @action(detail=False, methods=['POST'])
+    def unlike(self, request, **kwargs):
+        author = request.user
+        post_pk = kwargs.get('post_pk', None)
+        comment_pk = kwargs.get('comment_pk', None)
+
+        likes = Like.objects.filter(
+            author=author, post_id=post_pk, comment_id=comment_pk)
+        likes.delete()
+
+        return Response(likes)
