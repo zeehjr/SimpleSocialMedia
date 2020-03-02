@@ -19,6 +19,9 @@ const RootRouter = () => (
   <Suspense fallback={<Loading />}>
     <BrowserRouter>
       <Switch>
+        <Route path='/' exact>
+          <Redirect to='/feed' />
+        </Route>
         <Route path='/login'>
           <Login />
         </Route>

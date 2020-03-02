@@ -1,7 +1,7 @@
 import React from 'react'
 
 const inputClasses = errored =>
-  'px-4 py-3 border rounded focus:bg-white hover:bg-white' +
+  'px-4 py-3 border rounded focus:bg-white hover:bg-white disabled:bg-gray-500' +
   ' ' +
   (errored ? 'bg-red-100 border-red-400 border-2' : 'bg-gray-200')
 

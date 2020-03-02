@@ -2,7 +2,7 @@ import React from 'react'
 
 const CreatePost = () => {
   return (
-    <div className='flex flex-col bg-white mt-4'>
+    <div className='flex flex-col bg-white'>
       <header className='px-4 py-4 border-b'>
         <h5 className='font-semibold text-gray-800'>Create Post</h5>
       </header>

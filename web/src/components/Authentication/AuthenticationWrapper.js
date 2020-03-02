@@ -1,34 +1,49 @@
-import React, { useState, useEffect } from 'react'
+import React from 'react'
 import AuthenticationContext from './AuthenticationContext'
+import useApi from '../../hooks/useApi'
 // import { useHistory } from 'react-router'
 
-const storedToken = window.localStorage.getItem('token')
-
 const AuthenticationWrapper = ({ children }) => {
-  const [token, setToken] = useState(storedToken)
+  const { api } = useApi()
 
-  useEffect(() => {
-    window.localStorage.setItem('token', token)
-  }, [token])
+  const authenticate = async ({ username, password }) => {
+    const res = await api.post('/auth/token/', { username, password })
 
-  const authenticate = ({ username, password }) => {
-    setToken('someToken')
-    return true
+    if (res.status === 200 && res.data.token) {
+      api.setToken(res.data.token)
+      console.log(res)
+      return true
+    }
+
+    console.log('Errored viado')
+
+    api.setToken(null)
+    return false
   }
 
-  const register = ({ username, email, password, passwordConfirmation }) => {
-    setToken('someToken')
+  const register = async ({
+    username,
+    email,
+    password,
+    passwordConfirmation
+  }) => {
+    const res = await api.post('/auth/register/', { username, email, password })
 
-    return true
+    if (res.status === 201 && res.data.created_id) {
+      await authenticate({ username, password })
+      return true
+    }
+
+    return false
   }
 
   const logout = () => {
-    setToken(null)
+    api.setToken(null)
   }
 
   return (
     <AuthenticationContext.Provider
-      value={{ authenticate, register, logout, token }}
+      value={{ authenticate, register, logout, token: api.token }}
     >
       {children}
     </AuthenticationContext.Provider>

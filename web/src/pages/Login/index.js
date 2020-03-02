@@ -1,4 +1,4 @@
-import React, { useContext } from 'react'
+import React, { useContext, useState } from 'react'
 import { Link, useHistory } from 'react-router-dom'
 import * as Yup from 'yup'
 import { useFormik } from 'formik'
@@ -17,6 +17,9 @@ const Login = () => {
   const history = useHistory()
   const { authenticate } = useContext(AuthenticationContext)
 
+  const [loading, setLoading] = useState(false)
+  const [errored, setErrored] = useState(false)
+
   const {
     handleSubmit,
     errors,
@@ -31,9 +34,21 @@ const Login = () => {
     },
     validationSchema,
     onSubmit: v => {
-      if (authenticate(v)) {
-        history.push('/feed')
-      }
+      setLoading(true)
+      authenticate(v)
+        .then(result => {
+          if (result === true) {
+            history.push('/feed')
+          } else {
+            setErrored(true)
+          }
+        })
+        .catch(() => {
+          setErrored(true)
+        })
+        .finally(() => {
+          setLoading(false)
+        })
     }
   })
 
@@ -51,7 +66,12 @@ const Login = () => {
             </Link>
           </h2>
         </header>
-        <section className='flex flex-col mt-6'>
+        {errored && (
+          <div className='bg-red-600 p-4 mt-2 -mb-4 text-white text-center'>
+            Your username or password is incorrect
+          </div>
+        )}
+        <form className='flex flex-col mt-6' disabled={loading}>
           <FormField
             label='Username'
             type='username'
@@ -62,6 +82,7 @@ const Login = () => {
             errorMessage={errors.username}
             touched={touched.username}
             checkError
+            disabled={loading}
           />
           <FormField
             label='Password'
@@ -74,15 +95,17 @@ const Login = () => {
             touched={touched.password}
             checkError
             className='mt-2'
+            disabled={loading}
           />
           <button
-            className='py-3 bg-indigo-700 rounded mt-4 font-semibold text-white'
+            className='py-3 bg-indigo-700 rounded mt-4 font-semibold text-white disabled:bg-indigo-500 disabled:text-gray-400'
             type='button'
             onClick={handleSubmit}
+            disabled={loading}
           >
             Login
           </button>
-        </section>
+        </form>
       </div>
     </div>
   )

@@ -1,8 +1,9 @@
-import React from 'react'
-import { Link } from 'react-router-dom'
+import React, { useState, useContext } from 'react'
+import { Link, useHistory } from 'react-router-dom'
 import * as Yup from 'yup'
 import { useFormik } from 'formik'
 import FormField from '../../components/Form/FormField'
+import AuthenticationContext from '../../components/Authentication/AuthenticationContext'
 
 const validationSchema = Yup.object({
   username: Yup.string().matches(
@@ -18,6 +19,11 @@ const validationSchema = Yup.object({
 })
 
 const Register = () => {
+  const { register } = useContext(AuthenticationContext)
+  const history = useHistory()
+  const [loading, setLoading] = useState(false)
+  const [errored, setErrored] = useState(null)
+
   const {
     handleSubmit,
     errors,
@@ -33,7 +39,23 @@ const Register = () => {
       passwordConfirmation: ''
     },
     validationSchema,
-    onSubmit: v => console.log(v)
+    onSubmit: v => {
+      setLoading(true)
+      register(v)
+        .then(res => {
+          if (res === true) {
+            history.push('/feed')
+          } else {
+            setErrored(true)
+          }
+        })
+        .catch(() => {
+          setErrored(true)
+        })
+        .finally(() => {
+          setLoading(false)
+        })
+    }
   })
 
   return (
@@ -61,6 +83,7 @@ const Register = () => {
             errorMessage={errors.username}
             touched={touched.username}
             checkError
+            disabled={loading}
           />
           <FormField
             label='Email'
@@ -73,6 +96,7 @@ const Register = () => {
             touched={touched.email}
             checkError
             className='mt-2'
+            disabled={loading}
           />
           <FormField
             label='Password'
@@ -85,6 +109,7 @@ const Register = () => {
             touched={touched.password}
             checkError
             className='mt-2'
+            disabled={loading}
           />
           <FormField
             label='Confirm password'
@@ -97,11 +122,18 @@ const Register = () => {
             touched={touched.passwordConfirmation}
             checkError
             className='mt-2'
+            disabled={loading}
           />
+          {errored && (
+            <div className='bg-red-600 p-4 mt-2 -mb-2 text-white text-center'>
+              Something went wrong with your registration... Try again later
+            </div>
+          )}
           <button
-            className='py-3 bg-indigo-700 rounded mt-4 font-semibold text-white'
+            className='py-3 bg-indigo-700 rounded mt-4 font-semibold text-white disabled:bg-indigo-500 disabled:text-gray-400'
             type='button'
             onClick={handleSubmit}
+            disabled={loading}
           >
             Register
           </button>

@@ -1,39 +1,29 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import Post from './Post'
-
-const mock = [
-  {
-    id: 1,
-    author: {
-      name: 'José'
-    },
-    date: new Date(),
-    content: 'Olá, hoje hablaremos de macaquitos'
-  },
-  {
-    id: 2,
-    author: {
-      name: 'Tiago'
-    },
-    date: new Date(),
-    content: 'Apenas um post de teste'
-  },
-  {
-    id: 3,
-    author: {
-      name: 'Simaria'
-    },
-    date: new Date(),
-    content: 'Um post sobre "música"'
-  }
-]
+import useApi from '../../hooks/useApi'
 
 const Posts = () => {
+  const [posts, setPosts] = useState([])
+  const { api } = useApi()
+
+  useEffect(() => {
+    ;(async () => {
+      const res = await api.get('/v1/posts')
+
+      setPosts(res.data)
+    })()
+  }, [])
+
   return (
     <div className='flex flex-col'>
       <div>
-        {mock.map(post => (
-          <Post key={post.id} data={post} />
+        {posts.map(post => (
+          <Post
+            key={post.id}
+            data={post}
+            setPost={post =>
+              setPosts(posts.map(p => (p.id === post.id ? post : p)))}
+          />
         ))}
       </div>
     </div>
